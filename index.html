@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>発電方法と送電・電力バランスの学習</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for crisp presentation icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for clean Japanese typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS for animations and tweaks -->
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+
+        /* Slide transition animations */
+        .slide-enter {
+            animation: fadeInRight 0.35s ease-out forwards;
+        }
+        .slide-exit {
+            animation: fadeOutLeft 0.35s ease-out forwards;
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOutLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+        }
+
+        /* Spinning animation for turbines and wind blades */
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spinSlow 3s linear infinite;
+        }
+        .animate-spin-fast {
+            animation: spinSlow 1s linear infinite;
+        }
+
+        /* Water wave animation */
+        @keyframes waterFlow {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .animate-water-flow {
+            animation: waterFlow 1.5s linear infinite;
+        }
+
+        /* Steam pulse animation */
+        @keyframes steamRise {
+            0% { opacity: 0.2; transform: translateY(0) scale(0.8); }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; transform: translateY(-30px) scale(1.3); }
+        }
+        .animate-steam {
+            animation: steamRise 2s ease-out infinite;
+        }
+
+        /* Interactive Card Hover */
+        .card-interactive {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-interactive:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -10px rgba(14, 165, 233, 0.25);
+        }
+
+        /* Pulse highlight for CTA button */
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 0 14px rgba(14, 165, 233, 0);
+            }
+        }
+        .cta-pulse {
+            animation: pulseGlow 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-sky-200">
+
+    <!-- Top Header -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30 border-b-4 border-sky-500">
+        <div class="max-w-7xl mx-auto px-4 py-2 sm:px-6 flex items-center justify-between">
+            <!-- App Title & Badge -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-br from-sky-400 to-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-black text-xl shadow-inner">
+                    <i class="fa-solid fa-plug-circle-bolt"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                        発電方法と送電・電力バランス
+                        <span class="text-xs bg-sky-500 text-slate-950 px-2 py-0.5 rounded-full font-bold hidden sm:inline-block">中学校技術科 デジタル教材</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Slide Index Button -->
+                <button onclick="openIndexModal()" class="bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 transition active:scale-95" title="目次を開く">
+                    <i class="fa-solid fa-list-ul"></i>
+                    <span class="hidden md:inline">目次</span>
+                </button>
+
+                <!-- Fullscreen Toggle Button -->
+                <button onclick="toggleFullscreen()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 transition active:scale-95" title="全画面表示">
+                    <i class="fa-solid fa-expand" id="fullscreenIcon"></i>
+                    <span class="hidden md:inline" id="fullscreenText">大画面</span>
+                </button>
+
+                <!-- Current Slide Indicator -->
+                <div class="bg-slate-950 border border-sky-500/40 text-sky-300 px-3 py-1 rounded-full text-xs sm:text-sm font-mono font-bold">
+                    <span id="currentSlideNum">1</span> / <span id="totalSlideNum">8</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800 h-2">
+            <div id="progressBar" class="bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-400 h-2 transition-all duration-300 ease-out" style="width: 12.5%;"></div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-3 py-4 sm:px-6 sm:py-6 flex flex-col justify-center">
+        
+        <!-- Slide Cards Wrapper -->
+        <div id="slideContainer" class="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-5 sm:p-8 min-h-[560px] flex flex-col justify-between relative overflow-hidden transition-all">
+            
+            <!-- Dynamic Slide Content Inserted Here by JS -->
+            <div id="slideContent" class="slide-enter flex-grow flex flex-col justify-between">
+                <!-- Content generated via JavaScript -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <footer class="bg-white border-t border-slate-200 py-3 px-4 shadow-lg sticky bottom-0 z-20">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            
+            <!-- Prev Button -->
+            <button id="prevBtn" onclick="changeSlide(-1)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed font-bold px-4 sm:px-6 py-2.5 rounded-xl flex items-center gap-2 transition text-base active:scale-95">
+                <i class="fa-solid fa-chevron-left"></i>
+                <span class="hidden sm:inline">前へ</span>
+            </button>
+
+            <!-- Slide Dot Indicators -->
+            <div id="dotIndicators" class="flex items-center space-x-1.5 sm:space-x-2">
+                <!-- Dots populated by JS -->
+            </div>
+
+            <!-- Next Button -->
+            <button id="nextBtn" onclick="changeSlide(1)" class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-black px-4 sm:px-6 py-2.5 rounded-xl flex items-center gap-2 transition text-base shadow-md hover:shadow-lg active:scale-95">
+                <span class="hidden sm:inline">次へ</span>
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Mandatory Copyright Notice (Fixed Bottom Right) -->
+    <div class="fixed bottom-3 right-3 z-40 bg-slate-900/90 text-slate-200 backdrop-blur-md text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg shadow-lg border border-slate-700 pointer-events-none">
+        ©2026 t-suzuki
+    </div>
+
+    <!-- Slide Index Modal -->
+    <div id="indexModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-200">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-sky-500"></i>
+                    学習の目次（スライド一覧）
+                </h2>
+                <button onclick="closeIndexModal()" class="text-slate-400 hover:text-slate-600 text-2xl p-1 rounded-lg hover:bg-slate-100">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div id="modalIndexList" class="py-4 grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto flex-grow">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 text-right">
+                <button onclick="closeIndexModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-5 py-2 rounded-xl text-sm">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /*
+         * 発電方法と送電・電力バランスの学習 - デジタル教材Webアプリ
+         * 作成者: t-suzuki
+         */
+
+        // Sound System (Web Audio API)
+        const playSound = (freq = 440, type = 'sine', duration = 0.08) => {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {
+                // Safeguard
+            }
+        };
+
+        // 7つの発電方法のデータ構成
+        const plantData = {
+            thermal: {
+                name: "火力発電",
+                icon: "🔥",
+                color: "amber",
+                principle: "化石燃料（石油・石炭・LNG）を燃やして水を沸騰させ、その蒸気の力でタービンを回して発電する。",
+                features: ["燃料の取り扱いがしやすい", "発電量の調節がとてもしやすい（需要変化にすぐ対応可能）"],
+                issues: ["燃焼時に温室効果ガスの二酸化炭素（CO₂）を排出する", "燃料が輸入頼みで世界情勢に左右される"],
+                co2: "多",
+                adjust: "高 (1〜10段階で自由調整)",
+                weather: "無関係",
+                svgAnimation: () => `
+                    <div class="relative w-full h-36 bg-slate-900 rounded-xl p-3 overflow-hidden flex items-center justify-around">
+                        <!-- Boiler/Fire -->
+                        <div class="flex flex-col items-center">
+                            <div class="relative text-3xl animate-bounce">🔥</div>
+                            <div class="w-16 h-10 bg-slate-700 border-2 border-amber-500 rounded-t-lg mt-1 flex items-center justify-center text-[10px] text-amber-300 font-bold">ボイラー</div>
+                        </div>
+                        <!-- Pipe & Steam -->
+                        <div class="flex-grow h-2 bg-slate-600 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-amber-400 to-white animate-pulse"></div>
+                        </div>
+                        <!-- Turbine -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full border-4 border-dashed border-amber-400 flex items-center justify-center text-amber-400 font-black animate-spin-fast">
+                                ⚙️
+                            </div>
+                            <span class="text-[10px] text-slate-300 mt-1 font-bold">タービン回転</span>
+                        </div>
+                        <!-- Power Grid -->
+                        <div class="text-2xl text-yellow-400 animate-pulse"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                `
+            },
+
+            nuclear: {
+                name: "原子力発電",
+                icon: "⚛️",
+                color: "purple",
+                principle: "ウランという核燃料の核分裂熱で水を沸騰させ、高圧蒸気でタービンを回して発電する。",
+                features: ["少ない燃料で膨大な電気を発電できる", "24時間連続で安定して発電できる", "発電時にCO₂を出さない"],
+                issues: ["放射性物質を扱うため、厳重な安全管理が必要", "使用済み核燃料（放射性廃棄物）の処理", "出力調整が難しく常に一定運用"],
+                co2: "ゼロ",
+                adjust: "低 (当日の調整不可・0〜3固定)",
+                weather: "無関係",
+                svgAnimation: () => `
+                    <div class="relative w-full h-36 bg-slate-900 rounded-xl p-3 overflow-hidden flex items-center justify-around border border-purple-500/40">
+                        <div class="flex flex-col items-center">
+                            <div class="w-14 h-14 rounded-full border-2 border-purple-400 flex items-center justify-center text-3xl text-purple-300 animate-spin-slow">⚛️</div>
+                            <span class="text-[10px] text-purple-200 mt-1 font-bold">ウラン核反応</span>
+                        </div>
+                        <div class="text-purple-400 font-bold text-xs animate-pulse">➔ 蒸気 ➔</div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full border-4 border-dashed border-purple-400 flex items-center justify-center text-purple-300 animate-spin-fast">⚙️</div>
+                            <span class="text-[10px] text-slate-300 mt-1 font-bold">タービン</span>
+                        </div>
+                        <div class="text-2xl text-yellow-400 animate-pulse"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                `
+            },
+
+            solar: {
+                name: "太陽光発電",
+                icon: "☀️",
+                color: "amber",
+                principle: "太陽の光エネルギーを太陽光パネル（半導体）に直接当てることで電気に変換する。",
+                features: ["屋根や空き地など様々な場所に設置可能", "災害などの停電時にも非常用電源になる", "発電時にCO₂を出さない"],
+                issues: ["夜間は発電できず、雨や曇りの日は出力が落ちる", "海外に比べて設置コストがまだ高め"],
+                co2: "ゼロ",
+                adjust: "天候依存 (日中のみ・減量操作可)",
+                weather: "極めて大きい",
+                svgAnimation: () => `
+                    <div class="relative w-full h-36 bg-gradient-to-br from-amber-950 via-slate-900 to-slate-950 rounded-xl p-3 overflow-hidden flex items-center justify-around">
+                        <div class="text-4xl text-amber-400 animate-pulse">☀️</div>
+                        <div class="flex space-x-1 text-amber-300 text-xs animate-ping">➔ ➔ ➔</div>
+                        <div class="w-20 h-14 bg-blue-900 border-2 border-cyan-400 rounded grid grid-cols-3 gap-1 p-1">
+                            <div class="bg-blue-600/60 rounded"></div><div class="bg-blue-600/60 rounded"></div><div class="bg-blue-600/60 rounded"></div>
+                            <div class="bg-blue-600/60 rounded"></div><div class="bg-blue-600/60 rounded"></div><div class="bg-blue-600/60 rounded"></div>
+                        </div>
+                        <div class="text-2xl text-yellow-400 animate-pulse"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                `
+            },
+
+            wind: {
+                name: "風力発電",
+                icon: "🌀",
+                color: "sky",
+                principle: "風の運動エネルギーでブレード（大きな羽根）を回転させ、発電機を回して電気を作る。",
+                features: ["陸上だけでなく洋上（海の上）でも発電可能", "風があれば夜間でも発電可能", "発電時にCO₂を出さない"],
+                issues: ["風速や風向によって発電量が大きく変動する", "適した風の吹く場所が限られる", "騒音や鳥への影響"],
+                co2: "ゼロ",
+                adjust: "風速依存 (事前予測必要)",
+                weather: "大きい",
+                svgAnimation: () => `
+                    <div class="relative w-full h-36 bg-slate-900 rounded-xl p-3 overflow-hidden flex items-center justify-around border border-sky-500/30">
+                        <div class="text-cyan-300 text-xs font-bold space-y-1 animate-pulse">
+                            <div>💨 風の流れ</div>
+                            <div>🌀 💨 💨</div>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="text-4xl text-sky-300 animate-spin-fast">💨</div>
+                            <div class="w-2 h-10 bg-slate-600 rounded"></div>
+                        </div>
+                        <div class="text-2xl text-yellow-400 animate-pulse"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                `
+            },
+
+            biomass: {
+                name: "バイオマス発電",
+                icon: "🌲",
+                color: "emerald",
+                principle: "木片や家畜のフン・生ゴミから発生するメタンガス等を燃焼させてタービンを回す。",
+                features: ["廃材や生物資源を有効利用できる", "農村や地域の自然循環をいかせる", "植物が吸収したCO₂量と相殺（カーボンニュートラル）"],
+                issues: ["原料となるバイオマスが広い地域に散らばっており、収集や輸送の手間・コストが大きい"],
+                co2: "実質ゼロ",
+                adjust: "中 (燃料供給に依存)",
+                weather: "無関係",
+                svgAnimation: () => `
+                    <div class="relative w-full h-36 bg-slate-900 rounded-xl p-3 overflow-hidden flex items-center justify-around border border-emerald-500/30">
+                        <div class="flex flex-col items-center">
+                            <span class="text-3xl">🌲💩</span>
+                            <span class="text-[10px] text-emerald-300 font-bold mt-1">生物資源</span>
+                        </div>
+                        <div class="text-emerald-400 font-bold text-xs">➔ 発酵・燃焼 ➔</div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full border-4 border-dashed border-emerald-400 flex items-center justify-center text-emerald-300 animate-spin-fast">⚙️</div>
+                            <span class="text-[10px] text-slate-300 mt-1 font-bold">タービン</span>
+                        </div>
+                        <div class="text-2xl text-yellow-400 animate-pulse"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                `
+            },
+
+            hydro: {
+                name: "水力発電",
+                icon: "💧",
+                color: "blue",
+                principle: "高い場所から落とす水の落差（位置エネルギー）で水車タービンを力強く回転させる。",
+                features: ["一定量の電力を安定して連続発電可能", "水量の調整で迅速に発電量を切り替えられる", "発電時にCO₂を出さない"],
+                issues: ["ダム建設可能な適地が残っておらず、奥地での小規模開発に限られる", "建設時の環境改変"],
+                co2: "ゼロ",
+                adjust: "高 (水量制御で迅速調整可能)",
+                weather: "降水量に依存",
+                svgAnimation: () => `
+                    <div class="relative w-full h-36 bg-slate-900 rounded-xl p-3 overflow-hidden flex items-center justify-around border border-blue-500/30">
+                        <div class="flex flex-col items-center">
+                            <div class="text-3xl text-blue-400 animate-bounce">💧</div>
+                            <div class="w-12 bg-blue-700 h-10 rounded-t border-t-2 border-blue-400 text-[9px] text-blue-100 font-bold flex items-center justify-center">ダム落差</div>
+                        </div>
+                        <div class="text-blue-300 font-bold text-xs animate-pulse">➔ 高圧水流 ➔</div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full border-4 border-dashed border-blue-400 flex items-center justify-center text-blue-300 animate-spin-fast">⚙️</div>
+                            <span class="text-[10px] text-slate-300 mt-1 font-bold">水車タービン</span>
+                        </div>
+                        <div class="text-2xl text-yellow-400 animate-pulse"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                `
+            },
+
+            geothermal: {
+                name: "地熱発電",
+                icon: "♨️",
+                color: "orange",
+                principle: "地下深くに蓄えられた地球の地熱エネルギー（高熱蒸気・熱水）を取り出してタービンを回す。",
+                features: ["天候に左右されず昼も夜も安定発電", "使用後の温水を温室農業や温泉、地域暖房に再利用できる", "枯渇の心配がなくCO₂を出さない"],
+                issues: ["地下調査に莫大な費用と時間が必要", "適地が国立公園や温泉街と重なり、地元関係者との調整が必要"],
+                co2: "ゼロ",
+                adjust: "中 (安定連続発電向け)",
+                weather: "無関係",
+                svgAnimation: () => `
+                    <div class="relative w-full h-36 bg-slate-900 rounded-xl p-3 overflow-hidden flex items-center justify-around border border-orange-500/30">
+                        <div class="flex flex-col items-center">
+                            <div class="text-3xl text-orange-400 animate-pulse">♨️</div>
+                            <span class="text-[10px] text-orange-300 font-bold mt-1">マグマ地熱</span>
+                        </div>
+                        <div class="text-orange-300 font-bold text-xs">➔ 高温蒸気 ➔</div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full border-4 border-dashed border-orange-400 flex items-center justify-center text-orange-300 animate-spin-fast">⚙️</div>
+                            <span class="text-[10px] text-slate-300 mt-1 font-bold">タービン</span>
+                        </div>
+                        <div class="text-2xl text-yellow-400 animate-pulse"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                `
+            }
+        };
+
+        let activePlantKey = 'thermal';
+
+        // 復習クイズデータ（5問）
+        const quizQuestions = [
+            {
+                q: "1. CO₂を出さず、24時間安定して大量発電できるが、放射性廃棄物の処理や出力調整の難しさが課題の発電は？",
+                options: ["火力発電", "原子力発電", "太陽光発電"],
+                answer: 1,
+                desc: "ウランを燃料とする原子力発電は、CO₂を出さず安定発電できますが、厳しい安全管理と廃棄物処理が必要です。"
+            },
+            {
+                q: "2. 電柱に取り付けられている「柱上変圧器」は、何Vの電圧を家庭用の100V〜200Vに変換している？",
+                options: ["約6,600V", "約66,000V", "約500,000V"],
+                answer: 0,
+                desc: "配電線を通る約6,600Vの高圧電気を、家庭で安全に使える100Vや200Vに変圧するのが「柱上変圧器」です。"
+            },
+            {
+                q: "3. 電気の「使う量（需要）」と「作る量（供給）」のバランスが崩れるとどうなる？",
+                options: ["電気代が安くなる", "大停電が発生する可能性がある", "電気のスピードが速くなる"],
+                answer: 1,
+                desc: "電気の作る量と使う量は常にピッタリ一致させる必要があります。バランスが大きく崩れると発電所が停止し大停電になります。"
+            },
+            {
+                q: "4. 各家庭の部屋に電気を配電し、電気の使い過ぎなどの異常時に安全のため自動で配電を止める装置は？",
+                options: ["電力量計", "分電盤（ブレーカー）", "柱上変圧器"],
+                answer: 1,
+                desc: "分電盤（ブレーカー）は異常電流を検知するとブレーカーが落ちて火災や事故を防ぎます。"
+            },
+            {
+                q: "5. 発電所で発電した電気が長距離を送電されるとき、超高電圧（27万〜50万V）に昇圧する主な理由は？",
+                options: ["電球をより明るく光らせるため", "送電時の電気エネルギーのロス（熱ロス）を減らすため", "電圧を高くしないと電線が太くなりすぎるため"],
+                answer: 1,
+                desc: "電圧を高くして電流を小さくすることで、電線の抵抗による送電中の電気ロスを大幅に減らすことができます。"
+            }
+        ];
+
+        let currentQuizIdx = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+
+        // シミュレーター（電力バランス体験）状態
+        let simState = {
+            targetDemand: 80, // 目標需要量
+            thermal: 40,      // 火力
+            hydro: 20,        // 水力
+            renewable: 20     // 再エネ (太陽光・風力)
+        };
+
+        // スライド全データ構成
+        const slidesData = [
+            {
+                id: 1,
+                tag: "1. 本日の目標",
+                title: "発電方法と送電・電力バランスの学習",
+                subtitle: "私たちが使う電気はどう作られ、届いているのか？発電と調整の仕組みをマスターしよう！",
+                render: () => `
+                    <div class="space-y-5 my-auto">
+                        <!-- Main Banner Goal -->
+                        <div class="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                            <div class="absolute -right-6 -bottom-6 text-white/10 text-9xl font-black select-none pointer-events-none">POWER</div>
+                            <span class="inline-block bg-amber-400 text-slate-950 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider mb-2">本日の目標</span>
+                            <h3 class="text-xl sm:text-2xl font-black leading-snug">
+                                電気の発電方法について理解し、送電の仕組みと電力調整（電力バランス）を学ぼう
+                            </h3>
+                        </div>
+
+                        <!-- 3 Core Points -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="bg-sky-50 border border-sky-200 rounded-xl p-3.5 flex items-start gap-3">
+                                <div class="bg-sky-500 text-white w-8 h-8 rounded-lg flex items-center justify-center font-black shrink-0">1</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-xs sm:text-sm">7つの発電方法の仕組み</h4>
+                                    <p class="text-[11px] text-slate-600 mt-0.5">火力・原子力・太陽光・風力・バイオマス・水力・地熱の特徴と課題</p>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3">
+                                <div class="bg-amber-500 text-slate-950 w-8 h-8 rounded-lg flex items-center justify-center font-black shrink-0">2</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-xs sm:text-sm">電力バランスのコントロール</h4>
+                                    <p class="text-[11px] text-slate-600 mt-0.5">使う量と作る量を常に一致させる「需給調整」の重要性</p>
+                                </div>
+                            </div>
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-start gap-3">
+                                <div class="bg-emerald-600 text-white w-8 h-8 rounded-lg flex items-center justify-center font-black shrink-0">3</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-xs sm:text-sm">送電・配電と家庭の機器</h4>
+                                    <p class="text-[11px] text-slate-600 mt-0.5">高圧送電から柱上変圧器、分電盤（ブレーカー）までの流れ</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Checklist -->
+                        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 space-y-2">
+                            <p class="font-bold text-slate-700 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-sky-500"></i>
+                                今日の達成チェックリスト（タップしてチェックしよう！）
+                            </p>
+
+                            <label class="flex items-center gap-2.5 p-2 bg-slate-50 hover:bg-sky-50 rounded-lg cursor-pointer transition text-xs sm:text-sm">
+                                <input type="checkbox" onchange="playSound(600)" class="w-4 h-4 text-sky-500 rounded focus:ring-sky-400">
+                                <span class="font-medium text-slate-800">1. 各発電方法の「長所（メリット）」と「課題（デメリット）」を理解する</span>
+                            </label>
+
+                            <label class="flex items-center gap-2.5 p-2 bg-slate-50 hover:bg-sky-50 rounded-lg cursor-pointer transition text-xs sm:text-sm">
+                                <input type="checkbox" onchange="playSound(650)" class="w-4 h-4 text-sky-500 rounded focus:ring-sky-400">
+                                <span class="font-medium text-slate-800">2. なぜ火力発電が調整しやすく、太陽光や風力は調整が難しいか理由を言える</span>
+                            </label>
+
+                            <label class="flex items-center gap-2.5 p-2 bg-slate-50 hover:bg-sky-50 rounded-lg cursor-pointer transition text-xs sm:text-sm">
+                                <input type="checkbox" onchange="playSound(700)" class="w-4 h-4 text-sky-500 rounded focus:ring-sky-400">
+                                <span class="font-medium text-slate-800">3. 電力が発電所から超高圧送電線・柱上変圧器を経て家庭に届く電圧変化を知る</span>
+                            </label>
+
+                            <label class="flex items-center gap-2.5 p-2 bg-slate-50 hover:bg-sky-50 rounded-lg cursor-pointer transition text-xs sm:text-sm">
+                                <input type="checkbox" onchange="playSound(750)" class="w-4 h-4 text-sky-500 rounded focus:ring-sky-400">
+                                <span class="font-medium text-slate-800">4. 家庭の分電盤（ブレーカー）や電力量計、コンセント（100V/200V）の役割を覚える</span>
+                            </label>
+                        </div>
+                    </div>
+                `
+            },
+
+            {
+                id: 2,
+                tag: "2. 発電方法の解説",
+                title: "7つの発電方法の仕組みと図解",
+                subtitle: "タブを切り替えて各発電の動くアニメーションと特徴・課題を確認しよう！",
+                render: () => {
+                    const plant = plantData[activePlantKey];
+                    return `
+                        <div class="space-y-4 my-auto">
+                            <!-- Generator Selector Tabs -->
+                            <div class="flex overflow-x-auto space-x-1.5 pb-1 border-b border-slate-200">
+                                ${Object.keys(plantData).map(key => {
+                                    const p = plantData[key];
+                                    const isActive = key === activePlantKey;
+                                    return `
+                                        <button onclick="switchPlant('${key}')" class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 ${isActive ? 'bg-sky-500 text-slate-950 shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                                            <span>${p.icon}</span>
+                                            <span>${p.name}</span>
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+
+                            <!-- Active Plant Main Panel -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Left Column: SVG Animation & Principle -->
+                                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h3 class="font-black text-slate-900 text-lg flex items-center gap-2">
+                                                <span class="text-2xl">${plant.icon}</span>
+                                                ${plant.name}
+                                            </h3>
+                                            <span class="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full">動的イラスト図解</span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+                                            <b>仕組み:</b> ${plant.principle}
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Dynamic Animation Component -->
+                                    ${plant.svgAnimation()}
+                                </div>
+
+                                <!-- Right Column: Features & Issues -->
+                                <div class="space-y-3 flex flex-col justify-between">
+                                    <!-- Features Card -->
+                                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 space-y-1.5">
+                                        <span class="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-check text-emerald-600"></i> 長所・特徴
+                                        </span>
+                                        <ul class="text-xs text-slate-700 space-y-1 list-disc list-inside font-medium">
+                                            ${plant.features.map(f => `<li>${f}</li>`).join('')}
+                                        </ul>
+                                    </div>
+
+                                    <!-- Issues Card -->
+                                    <div class="bg-rose-50 border border-rose-200 rounded-xl p-3.5 space-y-1.5">
+                                        <span class="text-xs font-bold text-rose-800 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-exclamation text-rose-600"></i> 課題・デメリット
+                                        </span>
+                                        <ul class="text-xs text-slate-700 space-y-1 list-disc list-inside font-medium">
+                                            ${plant.issues.map(i => `<li>${i}</li>`).join('')}
+                                        </ul>
+                                    </div>
+
+                                    <!-- Property Badges -->
+                                    <div class="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
+                                        <div class="bg-slate-100 p-2 rounded-lg border border-slate-200">
+                                            <div class="text-slate-500">CO₂排出</div>
+                                            <div class="text-slate-800 text-xs mt-0.5">${plant.co2}</div>
+                                        </div>
+                                        <div class="bg-slate-100 p-2 rounded-lg border border-slate-200">
+                                            <div class="text-slate-500">出力調整</div>
+                                            <div class="text-slate-800 text-xs mt-0.5">${plant.adjust}</div>
+                                        </div>
+                                        <div class="bg-slate-100 p-2 rounded-lg border border-slate-200">
+                                            <div class="text-slate-500">天候影響</div>
+                                            <div class="text-slate-800 text-xs mt-0.5">${plant.weather}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            {
+                id: 3,
+                tag: "3. 特性比較",
+                title: "発電方法の特性比較マップ",
+                subtitle: "それぞれの発電方式には一長一短がある！組み合わせて使う理由とは？",
+                render: () => `
+                    <div class="space-y-4 my-auto">
+                        <!-- Table Comparison -->
+                        <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
+                            <table class="w-full text-xs text-left text-slate-700">
+                                <thead class="bg-slate-900 text-white font-bold text-[11px]">
+                                    <tr>
+                                        <th class="p-3">発電方法</th>
+                                        <th class="p-3">CO₂排出量</th>
+                                        <th class="p-3">発電量の調節</th>
+                                        <th class="p-3">天候の影響</th>
+                                        <th class="p-3">主な特徴と役割</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 bg-white font-medium">
+                                    <tr class="hover:bg-amber-50/50 transition">
+                                        <td class="p-2.5 font-bold text-slate-900 flex items-center gap-1.5">🔥 火力発電</td>
+                                        <td class="p-2.5 text-rose-600 font-bold">多い ⚠️</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">極めてしやすい (◎)</td>
+                                        <td class="p-2.5">影響なし</td>
+                                        <td class="p-2.5 text-[11px]">電力需要の変化に合わせた細かな微調整の要</td>
+                                    </tr>
+                                    <tr class="hover:bg-purple-50/50 transition">
+                                        <td class="p-2.5 font-bold text-slate-900 flex items-center gap-1.5">⚛️ 原子力発電</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">出さない (〇)</td>
+                                        <td class="p-2.5 text-rose-600 font-bold">難しい (固定)</td>
+                                        <td class="p-2.5">影響なし</td>
+                                        <td class="p-2.5 text-[11px]">24時間ベースとなる一定量の電力を支える</td>
+                                    </tr>
+                                    <tr class="hover:bg-amber-50/50 transition">
+                                        <td class="p-2.5 font-bold text-slate-900 flex items-center gap-1.5">☀️ 太陽光発電</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">出さない (〇)</td>
+                                        <td class="p-2.5 text-amber-600 font-bold">天候次第 (減量可)</td>
+                                        <td class="p-2.5 text-rose-600 font-bold">極めて大きい</td>
+                                        <td class="p-2.5 text-[11px]">日中のピーク時に威力を発揮（夜間不可）</td>
+                                    </tr>
+                                    <tr class="hover:bg-sky-50/50 transition">
+                                        <td class="p-2.5 font-bold text-slate-900 flex items-center gap-1.5">🌀 風力発電</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">出さない (〇)</td>
+                                        <td class="p-2.5 text-amber-600 font-bold">風速次第</td>
+                                        <td class="p-2.5 text-rose-600 font-bold">大きい</td>
+                                        <td class="p-2.5 text-[11px]">風があれば夜間も発電可能（洋上展開期待）</td>
+                                    </tr>
+                                    <tr class="hover:bg-blue-50/50 transition">
+                                        <td class="p-2.5 font-bold text-slate-900 flex items-center gap-1.5">💧 水力発電</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">出さない (〇)</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">迅速に調整可 (〇)</td>
+                                        <td class="p-2.5">降水量依存</td>
+                                        <td class="p-2.5 text-[11px]">安定発電と緊急時のすばやい調整の両立</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Energy Mix Concept -->
+                        <div class="bg-gradient-to-r from-sky-900 to-slate-900 text-white p-4 rounded-2xl text-xs space-y-1.5 shadow">
+                            <div class="font-bold text-sky-300 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-puzzle-piece"></i> なぜベストミックス（組み合わせ）が必要なの？
+                            </div>
+                            <p class="text-slate-200 leading-relaxed">
+                                ひとつの発電方法だけに頼ると、「天候不良による停電」や「CO₂の過剰排出」「燃料高騰」などのリスクが高まります。<b>それぞれの長所を組み合わせることで、安定して地球環境に優しく電気を届けることができます。</b>
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+
+            {
+                id: 4,
+                tag: "4. 電力バランス体験",
+                title: "ミニ電力バランス調整シミュレーター",
+                subtitle: "需要（使う量）に合わせて発電所（作る量）を調整し、ギャップ0%を目指そう！",
+                render: () => {
+                    const totalSupply = simState.thermal + simState.hydro + simState.renewable;
+                    const diff = totalSupply - simState.targetDemand;
+                    const diffPercent = Math.round((diff / simState.targetDemand) * 100);
+                    const isBalanced = Math.abs(diffPercent) <= 5;
+
+                    return `
+                        <div class="space-y-4 my-auto">
+                            <!-- Simulator Interactive Dashboard -->
+                            <div class="bg-slate-900 text-white rounded-2xl p-4 shadow-xl border border-slate-700 space-y-4">
+                                <!-- Status Display -->
+                                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                                    <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700">
+                                        <span class="text-slate-400 block text-[10px]">町の電力需要（使う量）</span>
+                                        <span class="text-lg font-black text-sky-300">${simState.targetDemand} MW</span>
+                                    </div>
+                                    <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700">
+                                        <span class="text-slate-400 block text-[10px]">合計発電量（作る量）</span>
+                                        <span class="text-lg font-black text-yellow-300">${totalSupply} MW</span>
+                                    </div>
+                                    <div class="bg-slate-800 p-2.5 rounded-xl border ${isBalanced ? 'border-emerald-500' : 'border-rose-500'}">
+                                        <span class="text-slate-400 block text-[10px]">需給ギャップ</span>
+                                        <span class="text-lg font-black ${isBalanced ? 'text-emerald-400' : 'text-rose-400'}">
+                                            ${diff > 0 ? '+' : ''}${diffPercent}% ${isBalanced ? '⭕ 適正' : '⚠️ 危険'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Visual Meter Bar -->
+                                <div>
+                                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                                        <span>電気のバランスゲージ</span>
+                                        <span>${isBalanced ? '✨ 電圧安定中' : diff > 0 ? '⚠️ 発電過多（大規模停電リスク）' : '⚠️ 発電不足（ブラックアウトリスク）'}</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 h-6 rounded-full overflow-hidden relative border border-slate-700 flex items-center">
+                                        <!-- Ideal Center Indicator -->
+                                        <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-white z-10" title="目標ライン"></div>
+                                        <!-- Dynamic Bar -->
+                                        <div class="h-full transition-all duration-300 ${isBalanced ? 'bg-emerald-500' : 'bg-rose-500'}" style="width: ${Math.min(100, Math.max(0, (totalSupply / (simState.targetDemand * 1.5)) * 100))}%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Generator Output Controls -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                                    <!-- Thermal Control -->
+                                    <div class="bg-slate-800/80 p-2.5 rounded-xl border border-amber-500/30">
+                                        <div class="flex justify-between font-bold text-amber-400 mb-1">
+                                            <span>🔥 火力発電（調整用）</span>
+                                            <span>${simState.thermal} MW</span>
+                                        </div>
+                                        <input type="range" min="0" max="80" value="${simState.thermal}" oninput="updateSim('thermal', this.value)" class="w-full accent-amber-500 cursor-pointer">
+                                        <span class="text-[9px] text-slate-400 block mt-1">※ 出力を自由に増減可能</span>
+                                    </div>
+
+                                    <!-- Hydro Control -->
+                                    <div class="bg-slate-800/80 p-2.5 rounded-xl border border-blue-500/30">
+                                        <div class="flex justify-between font-bold text-blue-400 mb-1">
+                                            <span>💧 水力発電</span>
+                                            <span>${simState.hydro} MW</span>
+                                        </div>
+                                        <input type="range" min="0" max="40" value="${simState.hydro}" oninput="updateSim('hydro', this.value)" class="w-full accent-blue-500 cursor-pointer">
+                                        <span class="text-[9px] text-slate-400 block mt-1">※ 水門で素早く調整可能</span>
+                                    </div>
+
+                                    <!-- Renewable Control -->
+                                    <div class="bg-slate-800/80 p-2.5 rounded-xl border border-emerald-500/30">
+                                        <div class="flex justify-between font-bold text-emerald-400 mb-1">
+                                            <span>☀️ 再エネ (自然依存)</span>
+                                            <span>${simState.renewable} MW</span>
+                                        </div>
+                                        <input type="range" min="0" max="40" value="${simState.renewable}" oninput="updateSim('renewable', this.value)" class="w-full accent-emerald-500 cursor-pointer">
+                                        <span class="text-[9px] text-slate-400 block mt-1">※ 天候変動を想定</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Official METI Game Link Banner -->
+                            <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow">
+                                <div>
+                                    <h4 class="font-black text-sm flex items-center gap-1.5">
+                                        <i class="fa-solid fa-gamepad text-lg"></i>
+                                        資源エネルギー庁『電力バランスゲーム』に挑戦しよう！
+                                    </h4>
+                                    <p class="text-[11px] font-medium text-slate-900 mt-0.5">
+                                        前日予報から火力を積み、当日のイベント（天候急変）に合わせて需給一致を狙う本格ゲーム！
+                                    </p>
+                                </div>
+                                <a href="https://energy-kyoiku.meti.go.jp/balance_game/" target="_blank" rel="noopener noreferrer" 
+                                   onclick="playSound(800)"
+                                   class="shrink-0 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold px-4 py-2 rounded-xl flex items-center gap-2 transition active:scale-95 shadow-md">
+                                    <span>ゲームを開く</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            {
+                id: 5,
+                tag: "5. 送電と配電",
+                title: "送電と配電の仕組み（高圧送電の理由）",
+                subtitle: "発電所で作られた膨大な電気はどうやって高電圧で運ばれるのか？",
+                render: () => `
+                    <div class="space-y-4 my-auto">
+                        <!-- Step-by-step Voltage Flow SVG Visual -->
+                        <div class="bg-slate-900 text-white p-4 rounded-2xl border border-slate-700 shadow-md">
+                            <div class="text-xs font-bold text-sky-400 mb-3 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-bolt"></i> 電気の変圧・送電ステップ</span>
+                                <span class="text-[10px] text-slate-400">発電所 ➔ 超高圧 ➔ 配電 ➔ 柱上 ➔ 家庭</span>
+                            </div>
+
+                            <!-- Flow Steps -->
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
+                                <!-- Step 1 -->
+                                <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 flex flex-col justify-between">
+                                    <div class="text-2xl my-1">🏭</div>
+                                    <div class="font-bold text-amber-400 text-xs">① 発電所</div>
+                                    <div class="text-[10px] text-slate-400 mt-1">電気を作る<br>(数千〜数万V)</div>
+                                </div>
+
+                                <!-- Step 2 -->
+                                <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 flex flex-col justify-between">
+                                    <div class="text-2xl my-1">🗼</div>
+                                    <div class="font-bold text-sky-400 text-xs">② 超高圧変電所</div>
+                                    <div class="text-[10px] text-slate-300 font-mono font-bold mt-1">27.5万〜50万V</div>
+                                </div>
+
+                                <!-- Step 3 -->
+                                <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 flex flex-col justify-between">
+                                    <div class="text-2xl my-1">🏭</div>
+                                    <div class="font-bold text-blue-400 text-xs">③ 配電用変電所</div>
+                                    <div class="text-[10px] text-slate-300 font-mono font-bold mt-1">約66,000V</div>
+                                </div>
+
+                                <!-- Step 4 -->
+                                <div class="bg-slate-800 p-2.5 rounded-xl border border-slate-700 flex flex-col justify-between">
+                                    <div class="text-2xl my-1">🪧</div>
+                                    <div class="font-bold text-cyan-400 text-xs">④ 柱上変圧器</div>
+                                    <div class="text-[10px] text-slate-300 font-mono font-bold mt-1">6,600V ➔ 100/200V</div>
+                                </div>
+
+                                <!-- Step 5 -->
+                                <div class="bg-slate-800 p-2.5 rounded-xl border border-emerald-500/50 flex flex-col justify-between col-span-2 sm:col-span-1">
+                                    <div class="text-2xl my-1">🏠</div>
+                                    <div class="font-bold text-emerald-400 text-xs">⑤ 一般家庭</div>
+                                    <div class="text-[10px] text-emerald-300 font-bold mt-1">100V / 200V</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Q&A Box: Why High Voltage? -->
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs space-y-2">
+                            <h4 class="font-black text-amber-900 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-circle-question text-amber-600"></i>
+                                なぜ発電所からは「超高電圧（数万〜数十万V）」で送電するの？
+                            </h4>
+                            <p class="text-slate-700 leading-relaxed font-medium">
+                                電線に電気を流すと、電線の抵抗によって電気の一部が<b>「熱エネルギー」として逃げてロス（送電損失）</b>してしまいます。<br>
+                                <b>電圧を非常に高くして電流を小さく送る</b>ことで、この送電中のロスを最小限に抑えて遠くまで効率よく届けることができます！
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+
+            {
+                id: 6,
+                tag: "6. 家に来る電気の流れ",
+                title: "家に来る電気の流れと4つの機器",
+                subtitle: "電柱からコンセントまで！家の中の電気を守り・計る安全装置！",
+                render: () => `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-auto">
+                        <!-- Device 1 -->
+                        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 hover:border-sky-400 transition card-interactive flex gap-3.5 items-start">
+                            <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-2xl shrink-0 font-black">
+                                1
+                            </div>
+                            <div>
+                                <span class="bg-sky-100 text-sky-800 text-[10px] font-bold px-2 py-0.5 rounded-full">柱の上にある灰色バケツ</span>
+                                <h3 class="font-bold text-slate-900 text-base mt-1">① 柱上変圧器</h3>
+                                <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                    高圧配電線を通る<b>約6,600V</b>の電気を、家庭で安全に使える<b>100Vや200V</b>の電圧に下げる変圧器。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Device 2 -->
+                        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 hover:border-sky-400 transition card-interactive flex gap-3.5 items-start">
+                            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl shrink-0 font-black">
+                                2
+                            </div>
+                            <div>
+                                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">家の外壁にあるメーター</span>
+                                <h3 class="font-bold text-slate-900 text-base mt-1">② 電力量計（スマートメーター）</h3>
+                                <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                    家庭で使用した電気の量（電力量：kWh）を正確に測定する。電力会社はこの数値をもとに電気料金を計算。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Device 3 -->
+                        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 hover:border-sky-400 transition card-interactive flex gap-3.5 items-start">
+                            <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-2xl shrink-0 font-black">
+                                3
+                            </div>
+                            <div>
+                                <span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full">洗面所や玄関にある安全装置</span>
+                                <h3 class="font-bold text-slate-900 text-base mt-1">③ 分電盤（ブレーカー）</h3>
+                                <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                    各部屋へ電気を配線する装置。電気の使い過ぎやショートなどの異常が起きると、即座に配電をストップ（落ちる）。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Device 4 -->
+                        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 hover:border-sky-400 transition card-interactive flex gap-3.5 items-start">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl shrink-0 font-black">
+                                4
+                            </div>
+                            <div>
+                                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">壁の差し込み口</span>
+                                <h3 class="font-bold text-slate-900 text-base mt-1">④ コンセント</h3>
+                                <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                    家電機器を接続する口。一般用は<b>100V</b>、エアコンやIHクッキングヒーター等のハイパワー用は<b>200V</b>で形状が異なる。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+
+            {
+                id: 7,
+                tag: "7. 復習クイズ",
+                title: "定着確認！発電＆送電クイズ（全5問）",
+                subtitle: "今日学んだ知識をクイズでテストしてみよう！全問正解を目指そう！",
+                render: () => renderQuizSlide()
+            },
+
+            {
+                id: 8,
+                tag: "8. まとめ＆学習リンク",
+                title: "電力バランスと送電のまとめ ＆ 学習ゲーム",
+                subtitle: "まとめの振り返りと外部体験コンテンツで理解を深めよう！",
+                render: () => `
+                    <div class="space-y-4 my-auto">
+                        <div class="bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl border-2 border-sky-400/40 text-center relative overflow-hidden">
+                            <div class="relative z-10 max-w-2xl mx-auto space-y-4">
+                                <span class="bg-sky-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider inline-block shadow">
+                                    学びを深めるインタラクティブサイトへ！
+                                </span>
+                                
+                                <h3 class="text-xl sm:text-2xl font-black text-sky-300">
+                                    資源エネルギー庁 デジタル学習コンテンツ
+                                </h3>
+
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    プリントに記載された公式の学習サイト＆ゲームで実際に発電指令を出し、電力をコントロールしてみましょう！
+                                </p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                                    <!-- Link 1 -->
+                                    <a href="https://www.enecho.meti.go.jp/about/kids/game/pdf/howto.pdf" target="_blank" rel="noopener noreferrer" 
+                                       onclick="playSound(800)"
+                                       class="cta-pulse bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-sm px-5 py-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2 active:scale-95">
+                                        <i class="fa-solid fa-book-open text-lg"></i>
+                                        ゲームの遊び方
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                                    </a>
+
+                                    <!-- Link 2 -->
+                                    <a href="https://energy-kyoiku.meti.go.jp/balance_game/" target="_blank" rel="noopener noreferrer" 
+                                       onclick="playSound(850)"
+                                       class="cta-pulse bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm px-5 py-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2 active:scale-95">
+                                        <i class="fa-solid fa-gamepad text-lg"></i>
+                                        電力バランスゲーム
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                                    </a>
+                                </div>
+                                <p class="text-xs text-sky-200 font-bold">高得点目指してチャレンジ！ これは大切な技術の学習です！！</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // 7つの発電切り替え関数
+        function switchPlant(key) {
+            playSound(600);
+            activePlantKey = key;
+            renderSlide(currentSlideIndex);
+        }
+
+        // シミュレーター値更新関数
+        function updateSim(type, val) {
+            simState[type] = parseInt(val, 10);
+            renderSlide(currentSlideIndex);
+        }
+
+        // 復習クイズレンダー関数
+        function renderQuizSlide() {
+            if (currentQuizIdx >= quizQuestions.length) {
+                return `
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center space-y-4 my-auto">
+                        <div class="text-5xl">🏆</div>
+                        <h3 class="text-2xl font-black text-slate-900">クイズ完了！</h3>
+                        <p class="text-lg font-bold text-sky-600">
+                            あなたのスコア: <span class="text-3xl text-slate-950">${quizScore}</span> / ${quizQuestions.length} 問正解
+                        </p>
+                        <p class="text-xs text-slate-600">
+                            ${quizScore === 5 ? '完璧です！発電方法と送電の仕組みをマスターしました！' : '惜しい！解説を見直して全問正解を目指そう！'}
+                        </p>
+                        <button onclick="resetQuiz()" class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition shadow active:scale-95 text-sm">
+                            <i class="fa-solid fa-rotate-right mr-1.5"></i> もう一度挑戦する
+                        </button>
+                    </div>
+                `;
+            }
+
+            const qData = quizQuestions[currentQuizIdx];
+            return `
+                <div class="space-y-4 my-auto">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-600 border-b border-slate-200 pb-2">
+                        <span class="flex items-center gap-1.5 text-sky-600">
+                            <i class="fa-solid fa-circle-question"></i>
+                            第 ${currentQuizIdx + 1} 問 / 全 ${quizQuestions.length} 問
+                        </span>
+                        <span class="bg-slate-200 px-2.5 py-0.5 rounded-full text-slate-700">現在のスコア: ${quizScore}</span>
+                    </div>
+
+                    <div class="bg-sky-50/70 border border-sky-200 rounded-2xl p-4">
+                        <h3 class="font-bold text-slate-900 text-base sm:text-lg mb-3">
+                            ${qData.q}
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5" id="interactiveQuizOptions">
+                            ${qData.options.map((opt, i) => `
+                                <button onclick="answerInteractiveQuiz(${i})" class="quiz-opt-btn bg-white hover:bg-sky-100/80 border border-slate-300 rounded-xl p-3 text-xs sm:text-sm font-semibold text-slate-800 transition text-left flex items-center justify-between">
+                                    <span>${opt}</span>
+                                    <i class="fa-regular fa-circle text-slate-300 text-xs"></i>
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <div id="interactiveQuizResult" class="hidden mt-3 p-3 rounded-xl text-xs font-semibold leading-relaxed"></div>
+                    </div>
+
+                    <div class="text-right">
+                        <button id="nextQuizBtn" onclick="nextQuizQuestion()" disabled class="bg-slate-300 text-slate-500 cursor-not-allowed font-bold px-5 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 ml-auto">
+                            <span>次の問題へ</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function answerInteractiveQuiz(selectedIdx) {
+            if (quizAnswered) return;
+            quizAnswered = true;
+
+            const qData = quizQuestions[currentQuizIdx];
+            const isCorrect = selectedIdx === qData.answer;
+            const resBox = document.getElementById('interactiveQuizResult');
+            const nextBtn = document.getElementById('nextQuizBtn');
+            const btns = document.querySelectorAll('#interactiveQuizOptions .quiz-opt-btn');
+
+            btns.forEach((btn, idx) => {
+                btn.disabled = true;
+                btn.classList.add('opacity-60');
+                if (idx === qData.answer) {
+                    btn.classList.remove('opacity-60', 'bg-white');
+                    btn.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+                } else if (idx === selectedIdx && !isCorrect) {
+                    btn.classList.remove('opacity-60', 'bg-white');
+                    btn.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+                }
+            });
+
+            resBox.classList.remove('hidden');
+            if (isCorrect) {
+                quizScore++;
+                playSound(880, 'triangle', 0.25);
+                resBox.className = "mt-3 p-3 rounded-xl text-xs font-semibold leading-relaxed bg-emerald-100 text-emerald-950 border border-emerald-300";
+                resBox.innerHTML = `⭕ <b>正解！</b> ${qData.desc}`;
+            } else {
+                playSound(220, 'sawtooth', 0.25);
+                resBox.className = "mt-3 p-3 rounded-xl text-xs font-semibold leading-relaxed bg-rose-100 text-rose-950 border border-rose-300";
+                resBox.innerHTML = `❌ <b>不正解！</b> 正解は「${qData.options[qData.answer]}」でした。<br>${qData.desc}`;
+            }
+
+            nextBtn.disabled = false;
+            nextBtn.className = "bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 ml-auto shadow active:scale-95";
+        }
+
+        function nextQuizQuestion() {
+            currentQuizIdx++;
+            quizAnswered = false;
+            renderSlide(currentSlideIndex);
+        }
+
+        function resetQuiz() {
+            currentQuizIdx = 0;
+            quizScore = 0;
+            quizAnswered = false;
+            renderSlide(currentSlideIndex);
+        }
+
+        let currentSlideIndex = 0;
+        const totalSlides = slidesData.length;
+
+        // UI DOM Elements
+        const slideContentEl = document.getElementById('slideContent');
+        const currentSlideNumEl = document.getElementById('currentSlideNum');
+        const totalSlideNumEl = document.getElementById('totalSlideNum');
+        const progressBarEl = document.getElementById('progressBar');
+        const dotIndicatorsEl = document.getElementById('dotIndicators');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const indexModal = document.getElementById('indexModal');
+        const modalIndexList = document.getElementById('modalIndexList');
+
+        // スライド描画処理
+        function renderSlide(index) {
+            const slide = slidesData[index];
+            
+            // Header slide info
+            currentSlideNumEl.textContent = index + 1;
+            totalSlideNumEl.textContent = totalSlides;
+
+            // Progress bar calculation
+            const progressPercent = ((index + 1) / totalSlides) * 100;
+            progressBarEl.style.width = `${progressPercent}%`;
+
+            // HTML Structure for slide header & dynamic content
+            slideContentEl.className = "slide-enter flex-grow flex flex-col justify-between";
+            slideContentEl.innerHTML = `
+                <div>
+                    <!-- Slide Tag Badge -->
+                    <div class="mb-2">
+                        <span class="bg-sky-100 text-sky-900 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5 border border-sky-300">
+                            <i class="fa-solid fa-bookmark text-sky-600"></i>
+                            ${slide.tag}
+                        </span>
+                    </div>
+                    
+                    <!-- Slide Title & Subtitle -->
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                        ${slide.title}
+                    </h2>
+                    <p class="text-slate-500 text-xs sm:text-sm mt-1 mb-4 font-medium">
+                        ${slide.subtitle}
+                    </p>
+
+                    <!-- Slide Main Inner View -->
+                    ${slide.render()}
+                </div>
+            `;
+
+            // Navigation buttons state
+            prevBtn.disabled = index === 0;
+            if (index === totalSlides - 1) {
+                nextBtn.classList.remove('bg-sky-500', 'hover:bg-sky-600', 'text-slate-950');
+                nextBtn.classList.add('bg-slate-700', 'hover:bg-slate-800', 'text-white');
+            } else {
+                nextBtn.classList.remove('bg-slate-700', 'hover:bg-slate-800', 'text-white');
+                nextBtn.classList.add('bg-sky-500', 'hover:bg-sky-600', 'text-slate-950');
+            }
+
+            // Update dot indicators
+            updateDots(index);
+        }
+
+        // ドットインジケーターの作成＆更新
+        function createDots() {
+            dotIndicatorsEl.innerHTML = '';
+            for (let i = 0; i < totalSlides; i++) {
+                const dot = document.createElement('button');
+                dot.className = `w-3 h-3 rounded-full transition-all duration-200 ${i === currentSlideIndex ? 'bg-sky-500 w-6' : 'bg-slate-300 hover:bg-slate-400'}`;
+                dot.title = `スライド ${i + 1}`;
+                dot.onclick = () => jumpToSlide(i);
+                dotIndicatorsEl.appendChild(dot);
+            }
+        }
+
+        function updateDots(activeIndex) {
+            const dots = dotIndicatorsEl.children;
+            for (let i = 0; i < dots.length; i++) {
+                if (i === activeIndex) {
+                    dots[i].className = "w-6 h-3 bg-sky-500 rounded-full transition-all duration-200";
+                } else {
+                    dots[i].className = "w-3 h-3 bg-slate-300 hover:bg-slate-400 rounded-full transition-all duration-200";
+                }
+            }
+        }
+
+        // スライド切り替え関数
+        function changeSlide(direction) {
+            const newIndex = currentSlideIndex + direction;
+            if (newIndex >= 0 && newIndex < totalSlides) {
+                playSound(500 + direction * 100);
+                currentSlideIndex = newIndex;
+                renderSlide(currentSlideIndex);
+            }
+        }
+
+        function jumpToSlide(index) {
+            if (index >= 0 && index < totalSlides) {
+                playSound(550);
+                currentSlideIndex = index;
+                renderSlide(currentSlideIndex);
+                closeIndexModal();
+            }
+        }
+
+        // 目次モーダル操作
+        function openIndexModal() {
+            playSound(600);
+            modalIndexList.innerHTML = slidesData.map((s, idx) => `
+                <button onclick="jumpToSlide(${idx})" class="p-3 text-left rounded-xl border ${idx === currentSlideIndex ? 'border-sky-500 bg-sky-50/80 font-bold' : 'border-slate-200 hover:bg-slate-50'} transition flex items-center justify-between group">
+                    <div>
+                        <span class="text-xs font-bold text-sky-600 block">${s.tag}</span>
+                        <span class="text-sm text-slate-800">${s.title}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-slate-400 group-hover:text-sky-500 transition"></i>
+                </button>
+            `).join('');
+
+            indexModal.classList.remove('hidden');
+            setTimeout(() => {
+                indexModal.classList.remove('opacity-0');
+            }, 10);
+        }
+
+        function closeIndexModal() {
+            indexModal.classList.add('opacity-0');
+            setTimeout(() => {
+                indexModal.classList.add('hidden');
+            }, 200);
+        }
+
+        // フルスクリーン切り替え
+        function toggleFullscreen() {
+            playSound(650);
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {});
+                document.getElementById('fullscreenIcon').className = "fa-solid fa-compress";
+                document.getElementById('fullscreenText').textContent = "標準";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    document.getElementById('fullscreenIcon').className = "fa-solid fa-expand";
+                    document.getElementById('fullscreenText').textContent = "大画面";
+                }
+            }
+        }
+
+        // キーボード操作サポート
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            } else if (e.key === 'Escape') {
+                closeIndexModal();
+            }
+        });
+
+        // アプリ初期化処理
+        window.addEventListener('DOMContentLoaded', () => {
+            createDots();
+            renderSlide(currentSlideIndex);
+        });
+    </script>
+</body>
+</html>
